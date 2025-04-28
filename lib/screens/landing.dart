@@ -19,6 +19,7 @@ class _LandingPageState extends State<LandingPage> {
   bool _isLoading = false;
   String? _currentFileName;
   String? _fileSize;
+  File? _currentFile;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _LandingPageState extends State<LandingPage> {
           _jsonData = data;
           _currentFileName = result.files.single.name;
           _fileSize = size;
+          _currentFile = file;
           _isLoading = false;
         });
       }
@@ -71,19 +73,39 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Future<void> _editJson() async {
-    final editedData = await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => JsonEditorScreen(
           initialJson: const JsonEncoder.withIndent('  ').convert(_jsonData),
-          currentFile:
-              _currentFileName != null ? File(_currentFileName!) : null,
+          currentFile: _currentFile,
         ),
       ),
     );
 
-    if (editedData != null) {
-      setState(() => _jsonData = editedData);
+    if (result != null) {
+      setState(() {
+        if (result is Map &&
+            result.containsKey('data') &&
+            result.containsKey('file')) {
+          _jsonData = result['data'];
+          _currentFile = result['file'];
+          _currentFileName = _currentFile!.path.split('/').last;
+          _updateFileSize();
+        } else {
+          _jsonData = result;
+          if (_currentFile != null) {
+            _updateFileSize();
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _updateFileSize() async {
+    if (_currentFile != null) {
+      _fileSize = await JsonService.getFileSize(_currentFile!);
+      setState(() {});
     }
   }
 
@@ -92,6 +114,7 @@ class _LandingPageState extends State<LandingPage> {
       _jsonData = null;
       _currentFileName = null;
       _fileSize = null;
+      _currentFile = null;
     });
   }
 
@@ -100,31 +123,34 @@ class _LandingPageState extends State<LandingPage> {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('JSON Editor'),
-        centerTitle: true,
         titleTextStyle: StylesForText().appBarStyle(isDarkMode),
         actions: [
           IconButton(
-            icon: const Icon(Icons.folder_open),
+            icon: Icon(Icons.folder_open,
+                color: isDarkMode ? Colors.white : Colors.grey.shade900),
             onPressed: _openFile,
             tooltip: 'Open JSON file',
           ),
           if (_jsonData != null)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: Icon(Icons.edit,
+                  color: isDarkMode ? Colors.white : Colors.grey.shade900),
               onPressed: _editJson,
               tooltip: 'Edit JSON',
             ),
           if (_jsonData != null)
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(Icons.close, color: Colors.red),
               onPressed: _closeJson,
               tooltip: 'Close',
             ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+              color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade400,
+            ))
           : _jsonData == null
               ? Center(
                   child: Column(
@@ -137,12 +163,31 @@ class _LandingPageState extends State<LandingPage> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _openFile,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          backgroundColor:
+                              isDarkMode ? Colors.grey[900] : Colors.grey[300],
+                          foregroundColor:
+                              isDarkMode ? Colors.white : Colors.black,
+                        ),
                         child: const Text('Open JSON File'),
                       ),
                       const SizedBox(height: 10),
                       TextButton(
                         onPressed: () => _loadInitialData(),
-                        child: const Text('Load Example'),
+                        child: Text(
+                          'Load Example',
+                          style: TextStyle(
+                            color: isDarkMode
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade500,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -152,6 +197,7 @@ class _LandingPageState extends State<LandingPage> {
                     if (_currentFileName != null || _fileSize != null)
                       Container(
                         color: isDarkMode ? Colors.grey[900] : Colors.grey[200],
+                        alignment: Alignment.centerLeft,
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.all(8.0),

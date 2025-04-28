@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class JsonService {
   static Future<File> _getLocalFile(String filename) async {
@@ -64,19 +66,70 @@ class JsonService {
     }
   }
 
-   static Future<void> saveJsonToFile(String filePath, dynamic jsonData) async {
+  static Future<String> saveJsonFile(String fileName, dynamic jsonData) async {
     try {
-      final file = File(filePath);
-      final directory = file.parent;
-      
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
+      var status = await Permission.manageExternalStorage.status;
+      if (!status.isGranted) {
+        status = await Permission.manageExternalStorage.request();
+        if (!status.isGranted) {
+          throw Exception(
+              'Storage permission denied. Please grant permissions in app settings.');
+        }
       }
-      
+
+      String? selectedDirectory;
+
+      try {
+        String? directoryPath = await FilePicker.platform.getDirectoryPath();
+        if (directoryPath != null) {
+          selectedDirectory = directoryPath;
+        }
+      } catch (e) {
+        print('Directory picker not supported: ${e.toString()}');
+      }
+
+      if (selectedDirectory == null) {
+        Directory directory;
+        if (Platform.isAndroid) {
+          if (await Permission.manageExternalStorage.isGranted) {
+            directory = Directory('/storage/emulated/0/Download');
+            if (!await directory.exists()) {
+              await directory.create(recursive: true);
+            }
+          } else {
+            directory = await getExternalStorageDirectory() ??
+                await getApplicationDocumentsDirectory();
+          }
+        } else {
+          directory = await getApplicationDocumentsDirectory();
+        }
+        selectedDirectory = directory.path;
+      }
+
+      if (!fileName.endsWith('.json')) {
+        fileName = '$fileName.json';
+      }
+
+      final file = File('$selectedDirectory/$fileName');
+
       await file.writeAsString(
         const JsonEncoder.withIndent('  ').convert(jsonData),
-        mode: FileMode.write,
       );
+
+      return file.path;
+    } catch (e) {
+      throw Exception('Failed to save file: ${e.toString()}');
+    }
+  }
+
+  static Future<String> saveToSpecificPath(
+      String path, dynamic jsonData) async {
+    try {
+      final file = File(path);
+      await file.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(jsonData),
+      );
+      return file.path;
     } catch (e) {
       throw Exception('Failed to save file: ${e.toString()}');
     }

@@ -39,7 +39,12 @@ class JsonViewerScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Copied to clipboard')));
         },
-        child: const Icon(Icons.copy),
+        backgroundColor:
+            isDarkMode ? Colors.grey.shade900 : Colors.grey.shade300,
+        child: Icon(
+          Icons.copy,
+          color: isDarkMode ? Colors.white : Colors.grey.shade900,
+        ),
       ),
     );
   }
