@@ -8,7 +8,8 @@ import 'package:json_opener/services/json_service.dart';
 import 'package:json_opener/style/theme.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+  final String? initialFileUri;
+  const LandingPage({super.key, this.initialFileUri});
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -24,6 +25,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
+    _handleInitialFile();
   }
 
   Future<void> _loadInitialData() async {
@@ -39,6 +41,50 @@ class _LandingPageState extends State<LandingPage> {
       _jsonData = data;
       _isLoading = false;
     });
+  }
+
+  Future<void> _handleInitialFile() async {
+    print('Initial file URI: ${widget.initialFileUri}');
+    if (widget.initialFileUri != null) {
+      try {
+        final file = File(widget.initialFileUri!);
+        if (await file.exists()) {
+          await _openFileFromUri(file);
+        } else {
+          print('File does not exist at path: ${file.path}');
+        }
+      } catch (e) {
+        print('Error opening initial file: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error opening file: ${e.toString()}')),
+          );
+        }
+      }
+    } else {
+      print('No initial file URI provided.');
+    }
+  }
+
+  Future<void> _openFileFromUri(File file) async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await JsonService.openJsonFile(file);
+      final size = await JsonService.getFileSize(file);
+
+      setState(() {
+        _jsonData = data;
+        _currentFileName = file.path.split('/').last;
+        _fileSize = size;
+        _currentFile = file;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
   }
 
   Future<void> _openFile() async {
