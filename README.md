@@ -11,5 +11,6 @@
 - 🌓 Dark mode support (if available)
 
 | Landing | Viewer | Editor |
-|----------|-----------|----------|
-| ![landing](screenshots/landing.png) | ![viewer](screenshots/viewer.png) | ![editor](screenshots/editor.png) |
+|---------|--------|--------|
+| <img src="screenshots/landing.png" width="200"/> | <img src="screenshots/viewer.png" width="200"/> | <img src="screenshots/editor.png" width="200"/> |
+
