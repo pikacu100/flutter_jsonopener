@@ -10,3 +10,6 @@
 - 💾 Save your changes changes 
 - 🌓 Dark mode support (if available)
 
+| Landing | Viewer | Editor |
+|----------|-----------|----------|
+| ![Gameplay](screenshots/landing.png) | ![Game Over](screenshots/viewer.png) | ![Settings](screenshots/editor.png) |
