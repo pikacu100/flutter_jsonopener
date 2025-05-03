@@ -12,5 +12,6 @@
 
 | Landing | Viewer | Editor |
 |---------|--------|--------|
-| <img src="screenshots/landing.png" width="200"/> | <img src="screenshots/viewer.png" width="200"/> | <img src="screenshots/editor.png" width="200"/> |
+| <img src="screenshots/landing.png" width="200" height="450"/> | <img src="screenshots/viewer.png" width="200" height="450"/> | <img src="screenshots/editor.png" width="200" height="450"/> |
+
 
