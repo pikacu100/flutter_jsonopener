@@ -12,4 +12,4 @@
 
 | Landing | Viewer | Editor |
 |----------|-----------|----------|
-| ![Gameplay](screenshots/landing.png) | ![Game Over](screenshots/viewer.png) | ![Settings](screenshots/editor.png) |
+| ![landing](screenshots/landing.png) | ![viewer](screenshots/viewer.png) | ![editor](screenshots/editor.png) |
